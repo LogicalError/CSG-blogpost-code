@@ -38,12 +38,17 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Brush.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="BrushMesh.cs" />
     <Compile Include="HalfEdge.cs" />
     <Compile Include="Plane.cs" />
     <Compile Include="Polygon.cs" />
     <Compile Include="Side.cs" />
     <Compile Include="Vector3f.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Todo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>

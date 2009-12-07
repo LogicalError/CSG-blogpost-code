@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 // Copyright (c) 2009 Sander van Rossen
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,13 +21,14 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace RealtimeCSG
 {
-	public enum Side
+	public class BrushMesh
 	{
-		Inside,
-		Outside,
-		Intersects
+		public readonly List<Polygon>	Polygons	= new List<Polygon>();
 	}
 }

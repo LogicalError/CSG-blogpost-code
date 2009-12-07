@@ -1,8 +1,30 @@
+#region License
+// Copyright (c) 2009 Sander van Rossen
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+#endregion
+
 using System;
 
 namespace RealtimeCSG
 {
-	public struct Plane
+	public class Plane
 	{
 		public float A;
 		public float B;
@@ -91,13 +113,13 @@ namespace RealtimeCSG
 		}
 
 
-		public float Distance(Vector3f vector)
+		public float Distance(Vector3f vertex)
 		{
 			return
 				(
-					(A * vector.X) +
-					(B * vector.Y) +
-					(C * vector.Z) -
+					(A * vertex.X) +
+					(B * vertex.Y) +
+					(C * vertex.Z) -
 					(D)
 				);
 		}
@@ -109,11 +131,16 @@ namespace RealtimeCSG
 			else return Side.Intersects;
 		}
 
-		static public Side OnSide(float distance)
+		public Side OnSide(float distance)
 		{
 			if		(distance >  Constants.DistanceEpsilon) return Side.Outside;
 			else if (distance < -Constants.DistanceEpsilon) return Side.Inside;
 			else return Side.Intersects;
+		}
+
+		public Side OnSide(Vector3f vertex)
+		{
+			return OnSide( Distance(vertex) );
 		}
 	}
 }
