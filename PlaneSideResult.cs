@@ -24,10 +24,10 @@ using System;
 
 namespace RealtimeCSG
 {
-	public enum Side
+	public enum PlaneSideResult : byte
 	{
-		Inside,
-		Outside,
-		Intersects
+		Intersects,	// On plane
+		Inside,		// Negative side of plane / 'inside' half-space
+		Outside		// Positive side of plane / 'outside' half-space
 	}
 }

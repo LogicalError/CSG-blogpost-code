@@ -21,9 +21,11 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 
 namespace RealtimeCSG
 {
+	[DebuggerDisplay("{A} {B} {C} {D}")]
 	public class Plane
 	{
 		public float A;
@@ -31,9 +33,11 @@ namespace RealtimeCSG
 		public float C;
 		public float D;
 		
-		public Vector3f Normal       { get { return new Vector3f(A, B, C); } set { A = value.X; B = value.Y; C = value.Z; } }
-		public Vector3f PointOnPlane { get { return Normal * D; } }
-
+		public Vector3 Normal       { get { return new Vector3(A, B, C); } set { A = value.X; B = value.Y; C = value.Z; } }
+		public Vector3 PointOnPlane { get { return Normal * D; } }
+		
+		#region Constructors
+		public Plane() { }
 
 		public Plane(Plane inPlane)
 		{
@@ -42,8 +46,8 @@ namespace RealtimeCSG
 			C = inPlane.C;
 			D = inPlane.D;
 		}
-		
-		public Plane(Vector3f inNormal, float inD)
+
+		public Plane(Vector3 inNormal, float inD)
 		{
 			A = inNormal.X;
 			B = inNormal.Y;
@@ -58,10 +62,12 @@ namespace RealtimeCSG
 			C = inC;
 			D = inD;
 		}
+		#endregion
 
-		public static Vector3f Intersection(Plane inPlane1,
-										    Plane inPlane2,
-										    Plane inPlane3)
+		#region Plane Intersection
+		public static Vector3 Intersection(Plane inPlane1,
+										   Plane inPlane2,
+										   Plane inPlane3)
 		{
 			// intersection point with 3 planes
 			//  {
@@ -72,7 +78,7 @@ namespace RealtimeCSG
 			//      z = -(-a2*b1*d3+a2*b3*d1-a3*b2*d1+d3*b2*a1-d2*b3*a1+d2*b1*a3)/
 			//           (-c2*b3*a1+c3*b2*a1-b1*c3*a2-c1*b2*a3+b3*c1*a2+c2*b1*a3)
 			//  }
-			
+
 			double bc1 = (inPlane1.B * inPlane3.C) - (inPlane3.B * inPlane1.C);
 			double bc2 = (inPlane2.B * inPlane1.C) - (inPlane1.B * inPlane2.C);
 			double bc3 = (inPlane3.B * inPlane2.C) - (inPlane2.B * inPlane3.C);
@@ -86,34 +92,49 @@ namespace RealtimeCSG
 			double z = +((inPlane1.B * ad3) + (inPlane2.B * ad1) + (inPlane3.B * ad2));
 			double w = -((inPlane1.A * bc3) + (inPlane2.A * bc1) + (inPlane3.A * bc2));
 
-			// better to have detectable invalid values then to have reaaaaaaally big values
+			// better to have detectable invalid values than to have reaaaaaaally big values
 			if (w > -Constants.NormalEpsilon && w < Constants.NormalEpsilon)
 			{
-				return new Vector3f(float.NaN,
-									float.NaN,
-									float.NaN);
-			} else
-				return new Vector3f((float)(x / w),
-									(float)(y / w),
-									(float)(z / w));
+				return new Vector3(float.NaN,
+								   float.NaN,
+								   float.NaN);
+			}
+			else
+				return new Vector3((float)(x / w),
+								   (float)(y / w),
+								   (float)(z / w));
 		}
-		
-		public static Vector3f Intersection(Vector3f start, Vector3f end, float sdist, float edist)
+		#endregion
+
+		#region Ray Intersection
+		public static Vector3 Intersection(Vector3 start, Vector3 end, float sdist, float edist)
 		{
-			Vector3f	vector	= end - start;
-			float		length	= edist - sdist;
-			float		delta	= edist / length;
+			Vector3 vector = end - start;
+			float length = edist - sdist;
+			float delta = edist / length;
 
 			return end - (delta * vector);
 		}
 
-		public Vector3f Intersection(Vector3f start, Vector3f end)
+		public Vector3 Intersection(Vector3 start, Vector3 end)
 		{
 			return Intersection(start, end, Distance(start), Distance(end));
 		}
+		#endregion
 
+		#region Distance
+		public float Distance(float x, float y, float z)
+		{
+			return
+				(
+					(A * x) +
+					(B * y) +
+					(C * z) -
+					(D)
+				);
+		}
 
-		public float Distance(Vector3f vertex)
+		public float Distance(Vector3 vertex)
 		{
 			return
 				(
@@ -123,24 +144,160 @@ namespace RealtimeCSG
 					(D)
 				);
 		}
+		#endregion
 
-		static public Side OnSide(float distance, float epsilon)
+		// These methods are designed for clarity and readability, 
+		//	if speed is your concern do not use enums and use the floating point values directly!!
+		#region OnSide
+		static public PlaneSideResult OnSide(float distance, float epsilon)
 		{
-			if		(distance >  epsilon) return Side.Outside;
-			else if (distance < -epsilon) return Side.Inside;
-			else return Side.Intersects;
+			if (distance > epsilon) return PlaneSideResult.Outside;
+			else if (distance < -epsilon) return PlaneSideResult.Inside;
+			else return PlaneSideResult.Intersects;
 		}
 
-		public Side OnSide(float distance)
+		public static PlaneSideResult OnSide(float distance)
 		{
-			if		(distance >  Constants.DistanceEpsilon) return Side.Outside;
-			else if (distance < -Constants.DistanceEpsilon) return Side.Inside;
-			else return Side.Intersects;
+			if (distance > Constants.DistanceEpsilon) return PlaneSideResult.Outside;
+			else if (distance < -Constants.DistanceEpsilon) return PlaneSideResult.Inside;
+			else return PlaneSideResult.Intersects;
 		}
 
-		public Side OnSide(Vector3f vertex)
+		public PlaneSideResult OnSide(float x, float y, float z)
 		{
-			return OnSide( Distance(vertex) );
+			return OnSide(Distance(x, y, z));
 		}
+
+		public PlaneSideResult OnSide(Vector3 vertex)
+		{
+			return OnSide(Distance(vertex));
+		}
+
+		public PlaneSideResult OnSide(AABB bounds)
+		{
+			var x = A >= 0 ? bounds.MinX : bounds.MaxX;
+			var y = B >= 0 ? bounds.MinY : bounds.MaxY;
+			var z = C >= 0 ? bounds.MinZ : bounds.MaxZ;
+			return OnSide(Distance(x, y, z));
+		}
+
+		public PlaneSideResult OnSide(AABB bounds, Vector3 translation)
+		{
+			var backward_x = A <= 0 ? bounds.MinX : bounds.MaxX;
+			var backward_y = B <= 0 ? bounds.MinY : bounds.MaxY;
+			var backward_z = C <= 0 ? bounds.MinZ : bounds.MaxZ;
+			var distance = Distance(backward_x + translation.X, backward_y + translation.Y, backward_z + translation.Z);
+			var side = OnSide(distance);
+			if (side == PlaneSideResult.Inside)
+				return PlaneSideResult.Inside;
+			var forward_x = A >= 0 ? bounds.MinX : bounds.MaxX;
+			var forward_y = B >= 0 ? bounds.MinY : bounds.MaxY;
+			var forward_z = C >= 0 ? bounds.MinZ : bounds.MaxZ;
+			distance = Distance(forward_x + translation.X, forward_y + translation.Y, forward_z + translation.Z);
+			side = OnSide(distance);
+			if (side == PlaneSideResult.Outside)
+				return PlaneSideResult.Outside;
+			return PlaneSideResult.Intersects;
+		}
+		#endregion
+
+		#region Plane Negation
+		public Plane Negated()
+		{
+			return new Plane(-A, -B, -C, -D);
+		}
+		#endregion
+
+		#region Plane Translation
+		public void Translate(Vector3 translation)
+		{
+			// translated offset = plane.Normal.Dotproduct(translation)
+			// normal = A,B,C
+			D += (A * translation.X) +
+				 (B * translation.Y) +
+				 (C * translation.Z);
+		}
+
+		public static Plane Translated(Plane plane, Vector3 translation)
+		{
+			return new Plane(plane.A, plane.B, plane.C,
+				// translated offset = plane.Normal.Dotproduct(translation)
+				// normal = A,B,C
+							 plane.D + (plane.A * translation.X) +
+									   (plane.B * translation.Y) +
+									   (plane.C * translation.Z));
+		}
+
+		public static Plane Translated(Plane plane, float translateX, float translateY, float translateZ)
+		{
+			return new Plane(plane.A, plane.B, plane.C,
+				// translated offset = plane.Normal.Dotproduct(translation)
+				// normal = A,B,C
+							 plane.D + (plane.A * translateX) +
+									   (plane.B * translateY) +
+									   (plane.C * translateZ));
+		}
+		#endregion
+
+		#region Plane comparisons
+		public override int GetHashCode()
+		{
+			return A.GetHashCode() ^
+					B.GetHashCode() ^
+					C.GetHashCode() ^
+					D.GetHashCode();
+		}
+
+		public bool Equals(Plane other)
+		{
+			if (Object.ReferenceEquals(this, other))
+				return true;
+			if (Object.ReferenceEquals(other, null))
+				return false;
+			return D == other.D &&
+					A == other.A &&
+					B == other.B &&
+					C == other.C;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (Object.ReferenceEquals(this, obj))
+				return true;
+			Plane other = obj as Plane;
+			if (Object.ReferenceEquals(other, null))
+				return false;
+			return D == other.D &&
+					A == other.A &&
+					B == other.B &&
+					C == other.C;
+		}
+
+		public static bool operator ==(Plane left, Plane right)
+		{
+			if (Object.ReferenceEquals(left, right))
+				return true;
+			if (Object.ReferenceEquals(left, null) ||
+				Object.ReferenceEquals(right, null))
+				return false;
+			return left.D == right.D &&
+					left.A == right.A &&
+					left.B == right.B &&
+					left.C == right.C;
+		}
+
+		public static bool operator !=(Plane left, Plane right)
+		{
+			if (Object.ReferenceEquals(left, right))
+				return false;
+			if (Object.ReferenceEquals(left, null) ||
+				Object.ReferenceEquals(right, null))
+				return true;
+			return left.D != right.D ||
+					left.A != right.A ||
+					left.B != right.B ||
+					left.C != right.C;
+		}
+		#endregion
 	}
 }
