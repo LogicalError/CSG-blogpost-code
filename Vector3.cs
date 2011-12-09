@@ -129,9 +129,9 @@ namespace RealtimeCSG
 
 		public static Vector3 Subtract(Vector3 left, Vector3 right)
 		{
-			return new Vector3((left.X + right.X),
-							   (left.Y + right.Y),
-							   (left.Z + right.Z));
+			return new Vector3((left.X - right.X),
+							   (left.Y - right.Y),
+							   (left.Z - right.Z));
 		}
 
 		public Vector3 Negated()
